@@ -1,0 +1,57 @@
+---
+import { text, type Lang } from '../i18n';
+type Placement = 'top' | 'in-article' | 'sticky-mobile';
+const { lang, placement } = Astro.props as { lang: Lang; placement: Placement };
+const client = import.meta.env.PUBLIC_ADSENSE_CLIENT;
+const slot = {
+  top: import.meta.env.PUBLIC_ADSENSE_SLOT_TOP,
+  'in-article': import.meta.env.PUBLIC_ADSENSE_SLOT_ARTICLE,
+  'sticky-mobile': import.meta.env.PUBLIC_ADSENSE_SLOT_MOBILE,
+}[placement];
+const enabled = /^ca-pub-\d+$/.test(client ?? '') && /^\d+$/.test(slot ?? '');
+const sticky = placement === 'sticky-mobile';
+const consent = {
+  de: 'Google-Anzeige laden', en: 'Load Google advertisement', pl: 'Wczytaj reklamę Google',
+};
+---
+{enabled && <section data-ad-placement={placement} aria-label={text[lang].ad} class:list={[
+  'mt-5 rounded-lg border border-slate-800 bg-slate-950 p-2 text-center text-xs text-slate-300',
+  sticky ? 'fixed inset-x-3 bottom-0 z-10 mx-auto mb-2 min-h-24 max-w-md shadow-xl sm:hidden' : 'min-h-[250px]',
+]}>
+  {sticky && <button type="button" data-ad-dismiss class="absolute right-2 top-1 rounded p-2" aria-label={text[lang].close}>×</button>}
+  <a href={`/${lang}/privacy/`} class="underline">{text[lang].ad}</a>
+  <div><button type="button" data-ad-load data-client={client} class="mt-2 rounded border border-slate-600 px-2 py-1">{consent[lang]}</button></div>
+  <ins class="adsbygoogle block" hidden data-ad-client={client} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true"></ins>
+</section>}
+{enabled && <script>
+  type AdWindow = Window & { adsbygoogle?: Record<string, never>[] };
+  let loader: Promise<void> | undefined;
+  for (const section of document.querySelectorAll<HTMLElement>('[data-ad-placement]')) {
+    section.querySelector('[data-ad-dismiss]')?.addEventListener('click', () => section.remove());
+    const button = section.querySelector<HTMLButtonElement>('[data-ad-load]');
+    const ad = section.querySelector<HTMLElement>('ins');
+    if (!button || !ad) continue;
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      loader ??= new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.async = true;
+        script.crossOrigin = 'anonymous';
+        script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + button.dataset.client;
+        script.onload = () => resolve();
+        script.onerror = () => { script.remove(); loader = undefined; reject(); };
+        document.head.append(script);
+      });
+      try {
+        await loader;
+        if (!ad.isConnected) return;
+        ad.hidden = false;
+        ((window as AdWindow).adsbygoogle ??= []).push({});
+        button.hidden = true;
+      } catch {
+        ad.hidden = true;
+        button.disabled = false;
+      }
+    });
+  }
+</script>}

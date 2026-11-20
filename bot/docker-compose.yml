@@ -1,0 +1,19 @@
+services:
+  hunter:
+    build: .
+    restart: unless-stopped
+    init: true
+    user: "${HOST_UID:?Set HOST_UID}:${HOST_GID:?Set HOST_GID}"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?Set GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      MAX_POSTS_PER_RUN: ${MAX_POSTS_PER_RUN:-2}
+      GIT_USERNAME: ${GIT_USERNAME:-}
+      GIT_TOKEN_FILE: /run/secrets/github_push
+    secrets:
+      - github_push
+    volumes:
+      - ..:/repo
+secrets:
+  github_push:
+    file: ${GIT_TOKEN_PATH:?Set GIT_TOKEN_PATH to a readable token file outside the checkout}

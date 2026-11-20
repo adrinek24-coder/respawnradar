@@ -1,0 +1,62 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import AffiliateBox from '../../components/AffiliateBox.astro';
+import { languages, text, type Lang } from '../../i18n';
+import { legal, operatorReady } from '../../legal';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const paths = posts.map(post => {
+    const [lang, slug] = post.id.split('/');
+    if (lang !== post.data.lang || !slug) throw new Error(`Invalid language or slug for ${post.id}`);
+    return { params: { lang: post.data.lang, slug }, props: { post } };
+  });
+  return [
+    ...paths,
+    ...languages.flatMap(lang => Object.entries(legal[lang]).map(([slug, page]) => ({
+      params: { lang, slug }, props: { page },
+    }))),
+  ];
+}
+const lang = Astro.params.lang as Lang;
+const t = text[lang];
+const { post, page } = Astro.props;
+const rendered = post ? await render(post) : undefined;
+const Content = rendered?.Content;
+const data = post?.data;
+const slug = Astro.params.slug;
+const alternates = data ? Object.fromEntries((await getCollection('posts')).filter(entry => entry.id.endsWith(`/${slug}`)).map(entry => [entry.data.lang, `/${entry.id}/`])) : Object.fromEntries(languages.filter(code => slug in legal[code]).map(code => [code, `/${code}/${slug}/`]));
+const url = new URL(Astro.url.pathname, Astro.site).href;
+const schema = data && {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type':'Article', headline:data.title, description:data.description, datePublished:data.pubDate.toISOString(), inLanguage:lang, mainEntityOfPage:url, author:{'@type':'Organization', name:'RespawnRadar'}, publisher:{'@type':'Organization', name:'RespawnRadar'} },
+    { '@type':'FAQPage', mainEntity:data.faq.map(({q,a}) => ({'@type':'Question', name:q, acceptedAnswer:{'@type':'Answer', text:a}})) },
+  ],
+};
+---
+<Base {lang} title={`${data?.title ?? page?.title} | RespawnRadar`} description={data?.description ?? page?.title ?? ''} article={!!data} {alternates} noindex={!data && !operatorReady}>
+  {schema && <script slot="head" type="application/ld+json" set:html={JSON.stringify(schema).replaceAll('<', '\\u003c')} />}
+  {data && Content ? <article class="mx-auto max-w-3xl">
+    <AdSlot {lang} placement="top" />
+    <header class="mb-8">
+      <p class="eyebrow">{t[data.category]}</p>
+      <h1 class="my-4 text-4xl font-black tracking-tight sm:text-5xl">{data.title}</h1>
+      <p class="text-lg text-slate-300">{data.description}</p>
+      <time class="mt-4 block text-sm text-slate-400" datetime={data.pubDate.toISOString()}>{data.pubDate.toLocaleDateString(lang, {dateStyle:'long', timeZone:'UTC'})}</time>
+    </header>
+    <div class="copy"><Content /></div>
+    <AdSlot {lang} placement="in-article" />
+    <AffiliateBox {lang} category={data.category} query={data.affiliateQuery} />
+    <section class="copy mt-8">
+      <h2>{t.faq}</h2>
+      {data.faq.map(({q,a}) => <div><h3>{q}</h3><p>{a}</p></div>)}
+    </section>
+    <AdSlot {lang} placement="sticky-mobile" />
+  </article> : page && <article class="panel copy mx-auto max-w-3xl">
+    <h1 class="text-4xl font-black">{page.title}</h1>
+    {page.paragraphs.map(paragraph => <p class="whitespace-pre-line">{paragraph}</p>)}
+  </article>}
+</Base>

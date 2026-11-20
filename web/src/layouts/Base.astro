@@ -1,0 +1,45 @@
+---
+import { languages, names, legalPages, text, type Lang } from '../i18n';
+import '../style.css';
+
+const { lang, title, description, article = false, alternates, noindex = false } = Astro.props as {
+  lang: Lang; title: string; description: string; article?: boolean;
+  alternates?: Partial<Record<Lang, string>>; noindex?: boolean;
+};
+const t = text[lang];
+const canonical = new URL(Astro.url.pathname, Astro.site!);
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical.href} />
+    {languages.map(code => alternates?.[code] && <link rel="alternate" hreflang={code} href={new URL(alternates[code]!, Astro.site).href} />)}
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:site_name" content="RespawnRadar" />
+    <slot name="head" />
+  </head>
+  <body>
+    <header class="border-b border-slate-800">
+      <div class="shell flex flex-wrap items-center justify-between gap-4 py-5">
+        <a class="brand" href={`/${lang}/`}>Respawn<span>Radar</span></a>
+        <nav class="flex gap-4 text-sm" aria-label={ { de: "Sprache", en: "Language", pl: "Język" }[lang] }>
+          {languages.map(code => <a href={alternates?.[code] ?? `/${code}/`} lang={code} hreflang={code} aria-current={lang === code ? 'true' : undefined}>{names[code]}</a>)}
+        </nav>
+      </div>
+    </header>
+    <main class="shell grow py-8 sm:py-12"><slot /></main>
+    <footer class="border-t border-slate-800 py-6 text-sm text-slate-300">
+      <nav class="shell flex flex-wrap gap-x-5 gap-y-3">
+        {legalPages.filter(page => page !== 'impressum' || lang === 'de').map(page => <a href={`/${lang}/${page}/`}>{t[page]}</a>)}
+      </nav>
+    </footer>
+  </body>
+</html>

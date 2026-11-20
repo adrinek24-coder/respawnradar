@@ -1,0 +1,26 @@
+---
+import { text, type Lang } from '../i18n';
+const { lang, category, query } = Astro.props as {
+  lang: Lang; category: 'game' | 'hardware' | 'deals'; query: string;
+};
+const t = text[lang];
+const amazonDE = ['Amazon DE', 'https://www.amazon.de/s', 'k', 'tag', import.meta.env.PUBLIC_AMAZON_DE_TAG];
+const amazonUS = ['Amazon US', 'https://www.amazon.com/s', 'k', 'tag', import.meta.env.PUBLIC_AMAZON_US_TAG];
+const merchants = category === 'hardware' ? (lang === 'en' ? [amazonUS, amazonDE] : [amazonDE, amazonUS]) : [
+  ['Eneba', 'https://www.eneba.com/store', 'text', 'af_id', import.meta.env.PUBLIC_ENEBA_REF],
+  ['G2A', 'https://www.g2a.com/search', 'query', 'adid', import.meta.env.PUBLIC_G2A_REF],
+];
+const links = merchants.map(([label, base, search, referral, value]) => {
+  const url = new URL(base);
+  url.searchParams.set(search, query);
+  if (value) url.searchParams.set(referral, value);
+  return { label, url };
+});
+---
+<aside class="panel my-8">
+  <h2 class="text-xl font-bold">{t.offers}</h2>
+  <p class="mt-2 text-sm text-slate-300">{t.disclosure}</p>
+  <div class="mt-4 flex flex-wrap gap-3">
+    {links.map(({label,url}) => <a class="rounded-lg bg-lime-300 px-4 py-2 font-bold text-slate-950 hover:bg-lime-200 hover:text-slate-950" href={url.href} rel="sponsored noopener noreferrer" target="_blank">{label}</a>)}
+  </div>
+</aside>

@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+import { languages, names } from '../i18n';
+const alternates = { de: '/de/', en: '/en/', pl: '/pl/' };
+---
+<Base lang="de" title="RespawnRadar" description="Gaming, Hardware und Angebote auf Deutsch, Englisch und Polnisch." {alternates}>
+  <section class="panel">
+    <h1 class="text-4xl font-black">RespawnRadar</h1>
+    <div class="mt-6 flex flex-wrap gap-4">
+      {languages.map(lang => <a class="rounded-lg border border-slate-600 px-4 py-2" href={alternates[lang]} lang={lang}>{names[lang]}</a>)}
+    </div>
+  </section>
+</Base>
