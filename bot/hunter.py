@@ -253,7 +253,7 @@ def main() -> None:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         parser.error("GEMINI_API_KEY is required to generate articles")
-    with genai.Client(vertexai=True, api_key=key, http_options=types.HttpOptions(timeout=90000)) as client:
+    with genai.Client(vertexai=True, api_key=key, http_options=types.HttpOptions(timeout=90000, api_version="v1")) as client:
         run(client, os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"), limit)
 
 
