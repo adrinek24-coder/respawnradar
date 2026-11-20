@@ -224,7 +224,7 @@ def run(client: genai.Client, model: str, limit: int) -> None:
             try:
                 filename = publish_topic(client, model, topic)
             except (genai.errors.APIError, ValidationError, ValueError) as exc:
-                logging.error("Could not publish %s (%s)", topic.slug, type(exc).__name__)
+                logging.error("Could not publish %s (%s): %s", topic.slug, type(exc).__name__, exc)
                 failures += 1
                 continue
             published[topic.slug] = {"file": filename, "source": topic.source, "url": topic.url}
