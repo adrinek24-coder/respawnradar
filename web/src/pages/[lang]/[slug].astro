@@ -20,6 +20,7 @@ export async function getStaticPaths() {
     }))),
   ];
 }
+
 const lang = Astro.params.lang as Lang;
 const t = text[lang];
 const { post, page } = Astro.props;
@@ -27,36 +28,190 @@ const rendered = post ? await render(post) : undefined;
 const Content = rendered?.Content;
 const data = post?.data;
 const slug = Astro.params.slug;
-const alternates = data ? Object.fromEntries((await getCollection('posts')).filter(entry => entry.id.endsWith(`/${slug}`)).map(entry => [entry.data.lang, `/${entry.id}/`])) : Object.fromEntries(languages.filter(code => slug in legal[code]).map(code => [code, `/${code}/${slug}/`]));
+
+const alternates = data
+  ? Object.fromEntries(
+      (await getCollection('posts'))
+        .filter(entry => entry.id.endsWith(`/${slug}`))
+        .map(entry => [entry.data.lang, `/${entry.id}/`])
+    )
+  : Object.fromEntries(
+      languages
+        .filter(code => slug in legal[code])
+        .map(code => [code, `/${code}/${slug}/`])
+    );
+
 const url = new URL(Astro.url.pathname, Astro.site).href;
+const readTime = post?.body ? Math.max(1, Math.ceil(post.body.split(/\s+/).length / 200)) : 3;
+
+const ui = {
+  de: { back: 'Alle Guides', readMin: 'Min. Lesezeit', video: 'Video-Guide', quickFaq: 'Häufige Fragen' },
+  en: { back: 'All Guides', readMin: 'min read', video: 'Video Guide', quickFaq: 'Quick FAQ' },
+  pl: { back: 'Wszystkie poradniki', readMin: 'min czytania', video: 'Wideo poradnik', quickFaq: 'Szybkie FAQ' },
+}[lang];
+
+const categoryColors = {
+  game: 'from-lime-400 to-emerald-500 text-slate-950',
+  hardware: 'from-cyan-400 to-blue-500 text-slate-950',
+  deals: 'from-amber-400 to-orange-500 text-slate-950',
+};
+
 const schema = data && {
   '@context': 'https://schema.org',
   '@graph': [
-    { '@type':'Article', headline:data.title, description:data.description, datePublished:data.pubDate.toISOString(), inLanguage:lang, mainEntityOfPage:url, author:{'@type':'Organization', name:'RespawnRadar'}, publisher:{'@type':'Organization', name:'RespawnRadar'} },
-    { '@type':'FAQPage', mainEntity:data.faq.map(({q,a}) => ({'@type':'Question', name:q, acceptedAnswer:{'@type':'Answer', text:a}})) },
+    {
+      '@type': 'Article',
+      headline: data.title,
+      description: data.description,
+      ...(data.image ? { image: [data.image] } : {}),
+      datePublished: data.pubDate.toISOString(),
+      inLanguage: lang,
+      mainEntityOfPage: url,
+      author: { '@type': 'Organization', name: 'RespawnPing' },
+      publisher: { '@type': 'Organization', name: 'RespawnPing' },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: data.faq.map(({ q, a }) => ({
+        '@type': 'Question',
+        name: q,
+        acceptedAnswer: { '@type': 'Answer', text: a },
+      })),
+    },
   ],
 };
 ---
-<Base {lang} title={`${data?.title ?? page?.title} | RespawnRadar`} description={data?.description ?? page?.title ?? ''} article={!!data} {alternates} noindex={!data && !operatorReady}>
+
+<Base
+  {lang}
+  title={`${data?.title ?? page?.title} | RespawnPing`}
+  description={data?.description ?? page?.title ?? ''}
+  article={!!data}
+  {alternates}
+  noindex={!data && !operatorReady}
+>
   {schema && <script slot="head" type="application/ld+json" set:html={JSON.stringify(schema).replaceAll('<', '\\u003c')} />}
-  {data && Content ? <article class="mx-auto max-w-3xl">
-    <AdSlot {lang} placement="top" />
-    <header class="mb-8">
-      <p class="eyebrow">{t[data.category]}</p>
-      <h1 class="my-4 text-4xl font-black tracking-tight sm:text-5xl">{data.title}</h1>
-      <p class="text-lg text-slate-300">{data.description}</p>
-      <time class="mt-4 block text-sm text-slate-400" datetime={data.pubDate.toISOString()}>{data.pubDate.toLocaleDateString(lang, {dateStyle:'long', timeZone:'UTC'})}</time>
-    </header>
-    <div class="copy"><Content /></div>
-    <AdSlot {lang} placement="in-article" />
-    <AffiliateBox {lang} category={data.category} query={data.affiliateQuery} />
-    <section class="copy mt-8">
-      <h2>{t.faq}</h2>
-      {data.faq.map(({q,a}) => <div><h3>{q}</h3><p>{a}</p></div>)}
-    </section>
-    <AdSlot {lang} placement="sticky-mobile" />
-  </article> : page && <article class="panel copy mx-auto max-w-3xl">
-    <h1 class="text-4xl font-black">{page.title}</h1>
-    {page.paragraphs.map(paragraph => <p class="whitespace-pre-line">{paragraph}</p>)}
-  </article>}
+  {data?.image && <meta slot="head" property="og:image" content={data.image} />}
+
+  {data && Content ? (
+    <article class="mx-auto max-w-4xl">
+      <div class="mb-6">
+        <a
+          href={`/${lang}/`}
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-3.5 py-2 text-xs font-bold text-slate-300 transition-colors hover:border-lime-400/50 hover:text-lime-400"
+        >
+          &larr; {ui.back}
+        </a>
+      </div>
+
+      <AdSlot {lang} placement="top" />
+
+      {/* Header + Quick Intel Bar */}
+      <header class="mt-6 mb-8 rounded-3xl border border-slate-800/90 bg-slate-900/60 p-6 sm:p-8">
+        <div class="flex flex-wrap items-center gap-3 text-xs font-bold">
+          <span class={`rounded-md bg-gradient-to-r px-2.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm ${categoryColors[data.category]}`}>
+            {t[data.category]}
+          </span>
+          <time class="text-slate-400" datetime={data.pubDate.toISOString()}>
+            {data.pubDate.toLocaleDateString(lang, { dateStyle: 'long', timeZone: 'UTC' })}
+          </time>
+          <span class="text-slate-600">&bull;</span>
+          <span class="text-lime-400">{readTime} {ui.readMin}</span>
+        </div>
+
+        <h1 class="mt-4 text-3xl font-black tracking-tight text-white leading-tight sm:text-5xl">
+          {data.title}
+        </h1>
+        <p class="mt-4 text-base text-slate-300 leading-relaxed sm:text-lg">
+          {data.description}
+        </p>
+
+        {data.tags.length > 0 && (
+          <div class="mt-5 flex flex-wrap gap-2 border-t border-slate-800/80 pt-4">
+            {data.tags.map(tag => (
+              <span class="rounded-lg bg-slate-950/90 border border-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-400">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {/* Cover Image 16:9 */}
+      {data.image && (
+        <figure class="mb-8 overflow-hidden rounded-3xl border border-slate-800/90 bg-slate-950 shadow-2xl">
+          <img
+            src={data.image}
+            alt={data.title}
+            class="aspect-video w-full object-cover object-center"
+          />
+        </figure>
+      )}
+
+      {/* Embedded YouTube Video (when available) */}
+      {data.videoId && (
+        <section class="mb-8 overflow-hidden rounded-3xl border border-lime-500/30 bg-slate-900/70 p-4 sm:p-5">
+          <div class="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-lime-400">
+            <span class="h-2 w-2 rounded-full bg-lime-400 animate-pulse"></span>
+            {ui.video}
+          </div>
+          <div class="aspect-video w-full overflow-hidden rounded-2xl bg-black">
+            <iframe
+              class="h-full w-full"
+              src={`https://www.youtube-nocookie.com/embed/${data.videoId}`}
+              title={data.title}
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </section>
+      )}
+
+      {/* Main Article Body */}
+      <div class="copy rounded-3xl border border-slate-800/80 bg-slate-900/40 p-6 sm:p-10">
+        <Content />
+      </div>
+
+      <div class="my-8">
+        <AdSlot {lang} placement="in-article" />
+      </div>
+
+      <AffiliateBox {lang} category={data.category} query={data.affiliateQuery} />
+
+      {/* Modern Accordion FAQ */}
+      <section class="mt-10 rounded-3xl border border-slate-800/90 bg-slate-900/60 p-6 sm:p-8">
+        <h2 class="mb-5 text-2xl font-black tracking-tight text-white">{t.faq ?? ui.quickFaq}</h2>
+        <div class="space-y-3">
+          {data.faq.map(({ q, a }, index) => (
+            <details
+              open={index === 0}
+              class="group rounded-2xl border border-slate-800 bg-slate-950/70 transition-colors open:border-lime-400/40"
+            >
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 p-4 font-bold text-white select-none group-hover:text-lime-400">
+                <span>{q}</span>
+                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-slate-800 text-xs font-black text-lime-400 transition-transform group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <div class="border-t border-slate-800/70 px-4 pb-4 pt-3 text-sm leading-relaxed text-slate-300">
+                {a}
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <AdSlot {lang} placement="sticky-mobile" />
+    </article>
+  ) : (
+    page && (
+      <article class="panel copy mx-auto max-w-3xl rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-10">
+        <h1 class="text-4xl font-black text-white">{page.title}</h1>
+        {page.paragraphs.map(paragraph => (
+          <p class="whitespace-pre-line text-slate-300">{paragraph}</p>
+        ))}
+      </article>
+    )
+  )}
 </Base>
