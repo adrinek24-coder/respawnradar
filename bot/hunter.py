@@ -1,4 +1,4 @@
-"""Collect gaming guides & trends, enrich with live search + images, and publish localized articles."""
+"""Collect gaming guides, videos & trends, enrich with live search + images, and publish localized articles."""
 from __future__ import annotations
 
 import argparse
@@ -10,7 +10,7 @@ import os
 import re
 import tempfile
 import unicodedata
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Literal
@@ -29,6 +29,8 @@ LANGUAGES = ("de", "en", "pl")
 
 # (Nazwa źródła, URL RSS, czy wymaga filtra GAMING)
 FEEDS = (
+    ("YouTube IGN", "https://www.youtube.com/feeds/videos.xml?channel_id=UCKy1dAqELo0zrOtPkf0eTMw", False),
+    ("YouTube Xbox", "https://www.youtube.com/feeds/videos.xml?channel_id=UCjBp_7RuDBUYbd1LegWEJ8g", False),
     ("Reddit GTA6", "https://www.reddit.com/r/GTA6/hot/.rss", False),
     ("Reddit Gaming", "https://www.reddit.com/r/gaming/hot/.rss", False),
     ("Reddit PCGaming", "https://www.reddit.com/r/pcgaming/hot/.rss", False),
@@ -48,15 +50,15 @@ GAMING = re.compile(
     re.I,
 )
 
-# Tematy poradnikowe dostają najwyższy priorytet przy wyborze do publikacji
 GUIDE_PRIORITY = re.compile(
     r"\b(?:how to|where to|location|money|cash|farm|glitch|secret|unlock|"
     r"guide|tips|tricks|best|build|settings|map|fast|easy|free|loot|weapon|"
-    r"car|vehicle|mission|heist|easter egg|walkthrough|fix|fps)\b",
+    r"car|vehicle|mission|heist|easter egg|walkthrough|fix|fps|gameplay|trailer)\b",
     re.I,
 )
 
 IMG_TAG = re.compile(r'<img[^>]+src=["\'](https://[^"\']+)["\']', re.I)
+YT_ID = re.compile(r"(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_-]{11})")
 
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 Answer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=600)]
@@ -93,6 +95,7 @@ class Topic:
     url: str
     slug: str
     image: str = ""
+    video_id: str = ""
     is_guide: bool = False
 
 
@@ -101,8 +104,19 @@ def slugify(title: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", ascii_title).strip("-")[:100].rstrip("-")
 
 
-def extract_image(item: dict) -> str:
-    """Wyciąga najlepszy dostępny URL zdjęcia (HTTPS) z wpisu RSS/Atom."""
+def extract_video_id(item: dict, link: str) -> str:
+    """Wyciąga 11-znakowe ID filmu YouTube z feedu YouTube lub linków w opisie."""
+    if yt_id := item.get("yt_videoid"):
+        if re.fullmatch(r"[A-Za-z0-9_-]{11}", str(yt_id)):
+            return str(yt_id)
+    for text in (link, item.get("summary", "") or ""):
+        if match := YT_ID.search(text):
+            return match.group(1)
+    return ""
+
+
+def extract_image(item: dict, video_id: str = "") -> str:
+    """Wyciąga najlepszy dostępny URL zdjęcia (HTTPS) z wpisu RSS/Atom lub YouTube."""
     candidates: list[str] = []
     for media in item.get("media_content", []) or []:
         if url := media.get("url"):
@@ -111,7 +125,7 @@ def extract_image(item: dict) -> str:
         if url := thumb.get("url"):
             candidates.append(url)
     for enc in item.get("enclosures", []) or []:
-        if (enc.get("type", "").startswith("image/") or enc.get("href", "").endswith((".jpg", ".jpeg", ".png", ".webp"))):
+        if enc.get("type", "").startswith("image/") or enc.get("href", "").endswith((".jpg", ".jpeg", ".png", ".webp")):
             if url := enc.get("href"):
                 candidates.append(url)
     summary = item.get("summary", "") or ""
@@ -124,13 +138,15 @@ def extract_image(item: dict) -> str:
         url = url.strip()
         if url.startswith("https://") and not any(bad in url.lower() for bad in ("pixel", "avatar", "icon", "emoji", "thumbs.redditmedia.com/default")):
             return url
+    if video_id:
+        return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
     return ""
 
 
 def fetch_topics() -> list[Topic]:
     topics: dict[str, Topic] = {}
     working_feeds = 0
-    headers = {"User-Agent": "RespawnRadarBot/2.0 (gaming guide aggregator; +https://github.com/adrinek24-coder/respawnradar)"}
+    headers = {"User-Agent": "RespawnPingBot/2.1 (gaming guide aggregator; +https://respawnping.com)"}
     with httpx.Client(timeout=15, follow_redirects=True, max_redirects=5) as client:
         for source, url, needs_gaming_filter in FEEDS:
             try:
@@ -143,7 +159,7 @@ def fetch_topics() -> list[Topic]:
             except (httpx.HTTPError, ValueError) as exc:
                 logging.warning("%s feed unavailable (%s)", source, type(exc).__name__)
                 continue
-            for item in feed.entries[:25]:
+            for item in feed.entries[:20]:
                 title = " ".join(item.get("title", "").split())[:300]
                 link = item.get("link", "")
                 try:
@@ -158,19 +174,22 @@ def fetch_topics() -> list[Topic]:
                 slug = slugify(title)
                 if not slug:
                     continue
-                image = extract_image(item)
+                video_id = extract_video_id(item, link)
+                image = extract_image(item, video_id)
                 is_guide = bool(GUIDE_PRIORITY.search(title))
-                topics.setdefault(slug, Topic(title, source, link, slug, image=image, is_guide=is_guide))
+                topics.setdefault(
+                    slug,
+                    Topic(title, source, link, slug, image=image, video_id=video_id, is_guide=is_guide),
+                )
     if not working_feeds:
         raise RuntimeError("No RSS feed responded with a valid document")
 
-    # Sortowanie: najpierw poradniki ze zdjęciem, potem poradniki, potem newsy ze zdjęciem
-    ordered = sorted(
+    # Priorytet: tematy z wideo + poradnik, potem samo wideo, potem poradniki ze zdjęciem
+    return sorted(
         topics.values(),
-        key=lambda t: (t.is_guide, bool(t.image)),
+        key=lambda t: (bool(t.video_id) and t.is_guide, bool(t.video_id), t.is_guide, bool(t.image)),
         reverse=True,
     )
-    return ordered
 
 
 def generate(client: genai.Client, model: str, topic: Topic) -> Edition:
@@ -208,7 +227,6 @@ def generate(client: genai.Client, model: str, topic: Topic) -> Edition:
 
 
 def render_markdown(article: Article, topic: Topic, lang: str, date: str, category: str) -> str:
-    # Only publish text Markdown. Disable model-provided HTML and external links.
     body = article.body
     if re.search(r"[<>]|\]\s*[\[(]|^\s*\[[^\]]+\]:|^\s*---\s*$", body, re.M):
         raise ValueError("Body contains HTML, a link, or a frontmatter delimiter")
@@ -218,6 +236,8 @@ def render_markdown(article: Article, topic: Topic, lang: str, date: str, catego
     fields.update(lang=lang, pubDate=date, category=category)
     if topic.image:
         fields["image"] = topic.image
+    if topic.video_id:
+        fields["videoId"] = topic.video_id
     header = "\n".join(f"{key}: {json.dumps(value, ensure_ascii=False)}" for key, value in fields.items())
     label = {"de": "Quelle", "en": "Source", "pl": "Źródło"}[lang]
     url = topic.url.replace("<", "%3C").replace(">", "%3E").replace("\\", "%5C")
@@ -295,9 +315,10 @@ def run(client: genai.Client, model: str, limit: int) -> None:
                 "source": topic.source,
                 "url": topic.url,
                 "image": topic.image,
+                "videoId": topic.video_id,
             }
             save_state(published)
-            logging.info("Published %s in DE, EN, and PL (image=%s)", filename, bool(topic.image))
+            logging.info("Published %s (image=%s, video=%s)", filename, bool(topic.image), bool(topic.video_id))
         if failures:
             raise RuntimeError(f"{failures} topic(s) could not be published")
         if not candidates:
@@ -313,7 +334,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     if args.feeds_only:
         for topic in fetch_topics()[:20]:
-            print(f"[guide={topic.is_guide} img={bool(topic.image)}] {topic.source}: {topic.title}")
+            print(f"[vid={bool(topic.video_id)} guide={topic.is_guide} img={bool(topic.image)}] {topic.source}: {topic.title}")
         return
     limit = int(os.environ.get("MAX_POSTS_PER_RUN", "2"))
     if limit < 1:
