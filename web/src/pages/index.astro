@@ -1,144 +1,209 @@
 ---
-import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
-import { languages, names } from '../i18n';
+import Base from '../../layouts/Base.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { languages, text } from '../../i18n';
 
-const allPosts = await getCollection('posts');
-const latestPosts = allPosts
-  .filter(post => post.data.lang === 'en')
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 6);
+export function getStaticPaths() {
+  return languages.map(lang => ({ params: { lang } }));
+}
 
+const { lang } = Astro.params;
+const t = text[lang];
+const posts = (await getCollection('posts', ({ data }) => data.lang === lang))
+  .sort((a, b) => +b.data.pubDate - +a.data.pubDate);
 const alternates = { de: '/de/', en: '/en/', pl: '/pl/' };
 
-const categoryLabels = {
-  game: { label: 'GUIDE', color: 'from-lime-400 to-emerald-500 text-slate-950' },
-  hardware: { label: 'HARDWARE', color: 'from-cyan-400 to-blue-500 text-slate-950' },
-  deals: { label: 'DEALS', color: 'from-amber-400 to-orange-500 text-slate-950' }
+const [heroMain, heroSide1, heroSide2, ...feedPosts] = posts;
+const heroSides = [heroSide1, heroSide2].filter(Boolean);
+
+const ui = {
+  de: { trending: 'TOP THEMEN', latest: 'NEUESTE GUIDES', all: 'Alle', video: 'VIDEO' },
+  en: { trending: 'TOP STORIES', latest: 'LATEST FEED', all: 'All', video: 'VIDEO' },
+  pl: { trending: 'NA TOPIE', latest: 'NAJNOWSZE', all: 'Wszystkie', video: 'WIDEO' },
+}[lang];
+
+const catBadge = {
+  game: 'bg-lime-400 text-black',
+  hardware: 'bg-cyan-400 text-black',
+  deals: 'bg-amber-400 text-black',
 };
 ---
 
-<Base lang="en" title="RespawnPing | Gaming Guides, Money Methods & Glitches" description="Your ultimate waypoint for gaming walkthroughs, secrets, fast cash methods, and hardware tips in English, Deutsch, and Polski." {alternates}>
-  
-  {/* Hero Section */}
-  <section class="relative overflow-hidden rounded-3xl bg-slate-950 border border-slate-800/80 my-8">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(132,204,22,0.18),transparent_55%)]"></div>
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(2,6,23,0.96)_45%,rgba(2,6,23,0.35))]"></div>
-    <div class="absolute right-0 top-0 h-full w-1/2 opacity-20 pointer-events-none hidden md:block" style="background-image: radial-gradient(circle, #84cc16 1px, transparent 1px); background-size: 24px 24px;"></div>
+<Base {lang} title={`RespawnPing | ${t.headline}`} description={t.intro} {alternates}>
+  {/* Editorial Magazine Bento Hero (3 Latest Stories) */}
+  {heroMain && (
+    <section class="grid gap-3 lg:grid-cols-12">
+      {/* Main Lead Story (Left - 8 cols) */}
+      <article class="group relative min-h-[340px] overflow-hidden rounded-xl bg-zinc-900 sm:min-h-[440px] lg:col-span-8">
+        {heroMain.data.image ? (
+          <img
+            src={heroMain.data.image}
+            alt={heroMain.data.title}
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <div class="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-900 to-black"></div>
+        )}
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent"></div>
 
-    <div class="relative z-10 px-6 py-14 md:px-12 md:py-20 max-w-3xl">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/25 text-lime-400 text-xs font-bold uppercase tracking-wider mb-6">
-        <span class="w-2 h-2 rounded-full bg-lime-400 animate-pulse"></span>
-        Live Gaming Guides &amp; Intel
-      </div>
-      
-      <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white leading-tight">
-        Your Waypoint For <span class="bg-gradient-to-r from-lime-400 to-emerald-400 bg-clip-text text-transparent">Gaming Secrets</span>
-      </h1>
-      <p class="mt-4 text-lg md:text-xl text-slate-300 font-medium">
-        Exact locations, fast cash methods, glitches, and gear. Pinpointing what matters before everyone else.
-      </p>
-
-      <div class="mt-8">
-        <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Choose your edition</p>
-        <div class="flex flex-wrap gap-3">
-          {languages.map(lang => (
-            <a 
-              class="group rounded-xl bg-slate-900/90 border border-slate-800 px-5 py-2.5 font-bold text-white transition-all hover:border-lime-400/60 hover:bg-slate-800/80 hover:shadow-[0_0_20px_rgba(132,204,22,0.18)] flex items-center gap-2.5" 
-              href={alternates[lang]} 
-              lang={lang}
-            >
-              <span class="w-2 h-2 rounded-full bg-slate-600 group-hover:bg-lime-400 transition-colors"></span>
-              {names[lang]}
-            </a>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {/* Latest Guides Feed */}
-  <section class="my-12">
-    <div class="flex items-end justify-between mb-8 border-b border-slate-800 pb-4">
-      <div>
-        <h2 class="text-2xl font-black text-white tracking-tight">Latest Guides</h2>
-        <p class="text-slate-400 text-sm mt-1">Fresh walkthroughs, locations, and verified tricks</p>
-      </div>
-      <a href="/en/" class="text-sm font-bold text-lime-400 hover:text-lime-300 transition-colors">
-        View all &rarr;
-      </a>
-    </div>
-
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {latestPosts.map(post => {
-        const cat = categoryLabels[post.data.category] || categoryLabels.game;
-        const postUrl = `/${post.data.lang}/${post.id.split('/').pop()?.replace('.md', '')}`;
-        const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        });
-
-        return (
-          <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-slate-900/70 border border-slate-800/90 hover:border-lime-400/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.8),0_0_20px_rgba(132,204,22,0.08)]">
-            
-            {/* Thumbnail 16:9 */}
-            <div class="relative aspect-video w-full overflow-hidden bg-slate-950">
-              {post.data.image ? (
-                <img 
-                  src={post.data.image} 
-                  alt={post.data.title} 
-                  class="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-              ) : (
-                <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950/80 flex items-center justify-center">
-                  <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle, #84cc16 1px, transparent 1px); background-size: 16px 16px;"></div>
-                  <svg class="w-12 h-12 text-lime-400/35 group-hover:text-lime-400/60 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="9" />
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-                  </svg>
-                </div>
-              )}
-              
-              {/* Category Badge */}
-              <span class={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md bg-gradient-to-r shadow-lg ${cat.color}`}>
-                {cat.label}
+        <div class="relative flex h-full flex-col justify-end p-6 sm:p-8">
+          <div class="mb-3 flex items-center gap-2">
+            <span class={`px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${catBadge[heroMain.data.category]}`}>
+              {t[heroMain.data.category]}
+            </span>
+            {heroMain.data.videoId && (
+              <span class="bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white">
+                ▶ {ui.video}
               </span>
-            </div>
+            )}
+          </div>
+          <h1 class="max-w-2xl text-2xl font-black leading-tight tracking-tight text-white transition-colors group-hover:text-lime-400 sm:text-4xl">
+            <a href={`/${heroMain.id}/`} class="after:absolute after:inset-0">
+              {heroMain.data.title}
+            </a>
+          </h1>
+          <p class="mt-2.5 hidden max-w-xl text-sm text-zinc-300 line-clamp-2 sm:block">
+            {heroMain.data.description}
+          </p>
+        </div>
+      </article>
 
-            {/* Content */}
-            <div class="flex flex-1 flex-col p-5">
-              <span class="text-xs text-slate-500 font-medium">{formattedDate}</span>
-              
-              <h3 class="mt-2 text-lg font-bold text-white group-hover:text-lime-400 transition-colors line-clamp-2 leading-snug">
-                <a href={postUrl} class="after:absolute after:inset-0">
+      {/* Secondary Stacked Stories (Right - 4 cols) */}
+      <div class="grid gap-3 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1">
+        {heroSides.map(post => (
+          <article class="group relative min-h-[205px] overflow-hidden rounded-xl bg-zinc-900">
+            {post.data.image ? (
+              <img
+                src={post.data.image}
+                alt={post.data.title}
+                class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            ) : (
+              <div class="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-900 to-black"></div>
+            )}
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+
+            <div class="relative flex h-full flex-col justify-end p-5">
+              <div class="mb-2 flex items-center gap-2">
+                <span class={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${catBadge[post.data.category]}`}>
+                  {t[post.data.category]}
+                </span>
+                {post.data.videoId && (
+                  <span class="bg-red-600 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                    ▶
+                  </span>
+                )}
+              </div>
+              <h2 class="text-lg font-extrabold leading-snug text-white transition-colors group-hover:text-lime-400 line-clamp-2">
+                <a href={`/${post.id}/`} class="after:absolute after:inset-0">
                   {post.data.title}
                 </a>
-              </h3>
-              
-              <p class="mt-2 text-sm text-slate-400 line-clamp-2 flex-grow">
-                {post.data.description}
-              </p>
+              </h2>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
 
-              <div class="mt-4 pt-4 border-t border-slate-800/70 flex items-center justify-between">
-                <div class="flex flex-wrap gap-1.5 overflow-hidden max-h-5">
-                  {post.data.tags.slice(0, 2).map(tag => (
-                    <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-slate-400">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-                <span class="text-xs font-bold text-lime-400 inline-flex items-center gap-1 flex-shrink-0">
-                  Read &rarr;
-                </span>
+  <div class="my-8">
+    <AdSlot {lang} placement="top" />
+  </div>
+
+  {/* Clean Editorial Feed (No Boxy Borders) */}
+  <section class="mt-10">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4 border-b-2 border-zinc-800 pb-3">
+      <div class="flex items-center gap-3">
+        <span class="h-5 w-1.5 bg-lime-400"></span>
+        <h2 class="text-xl font-black uppercase tracking-tight text-white">{ui.latest}</h2>
+      </div>
+
+      <div class="flex flex-wrap gap-2" id="category-filters">
+        <button data-filter="all" class="filter-btn cursor-pointer border-b-2 border-lime-400 px-2 py-1 text-xs font-black uppercase tracking-wider text-white">
+          {ui.all}
+        </button>
+        {(['game', 'hardware', 'deals'] as const).map(cat => (
+          <button data-filter={cat} class="filter-btn cursor-pointer border-b-2 border-transparent px-2 py-1 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-white">
+            {t[cat]}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="divide-y divide-zinc-800/80">
+      {feedPosts.map(({ id, data }) => (
+        <article
+          data-category={data.category}
+          class="post-card group relative grid gap-5 py-6 sm:grid-cols-12 sm:items-center"
+        >
+          {/* Left Thumbnail */}
+          <div class="relative aspect-video overflow-hidden rounded-lg bg-zinc-900 sm:col-span-4">
+            {data.image ? (
+              <img
+                src={data.image}
+                alt={data.title}
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-950">
+                <span class="text-xs font-black uppercase tracking-widest text-zinc-600">RespawnPing</span>
               </div>
+            )}
+            {data.videoId && (
+              <span class="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[10px] font-black text-lime-400 backdrop-blur-sm">
+                ▶ {ui.video}
+              </span>
+            )}
+          </div>
+
+          {/* Right Editorial Text */}
+          <div class="sm:col-span-8">
+            <div class="flex items-center gap-3 text-xs font-bold uppercase tracking-wider">
+              <span class="text-lime-400">{t[data.category]}</span>
+              <span class="text-zinc-600">/</span>
+              <time class="text-zinc-500" datetime={data.pubDate.toISOString()}>
+                {data.pubDate.toLocaleDateString(lang, { dateStyle: 'medium', timeZone: 'UTC' })}
+              </time>
             </div>
 
-          </article>
-        );
-      })}
+            <h3 class="mt-2 text-xl font-black leading-snug text-white transition-colors group-hover:text-lime-400 sm:text-2xl">
+              <a href={`/${id}/`} class="after:absolute after:inset-0">
+                {data.title}
+              </a>
+            </h3>
+
+            <p class="mt-2 text-sm leading-relaxed text-zinc-400 line-clamp-2">
+              {data.description}
+            </p>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+              {data.tags.slice(0, 3).map(tag => (
+                <span class="text-[11px] font-semibold text-zinc-500">#{tag}</span>
+              ))}
+            </div>
+          </div>
+        </article>
+      ))}
     </div>
   </section>
+
+  <script>
+    const buttons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.post-card');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-filter');
+        buttons.forEach(b => {
+          b.className = 'filter-btn cursor-pointer border-b-2 border-transparent px-2 py-1 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-white';
+        });
+        btn.className = 'filter-btn cursor-pointer border-b-2 border-lime-400 px-2 py-1 text-xs font-black uppercase tracking-wider text-white';
+        cards.forEach(card => {
+          const cat = card.getAttribute('data-category');
+          (card as HTMLElement).style.display = (filter === 'all' || cat === filter) ? '' : 'none';
+        });
+      });
+    });
+  </script>
 </Base>
