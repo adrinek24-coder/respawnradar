@@ -13,6 +13,7 @@ const posts = defineCollection({
     tags: z.array(z.string().min(1)).min(1),
     affiliateQuery: z.string().min(1),
     faq: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(1),
+    image: z.string().url().optional(), // Nowe opcjonalne pole na zdjęcie pobrane przez bota
   }),
 });
 export const collections = { posts };
