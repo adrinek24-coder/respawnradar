@@ -3,56 +3,52 @@ import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { languages, names } from '../i18n';
 
-// Pobieramy artykuły, aby pokazać nowości prosto na wejściu!
 const allPosts = await getCollection('posts');
 const latestPosts = allPosts
+  .filter(post => post.data.lang === 'en')
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 6);
 
 const alternates = { de: '/de/', en: '/en/', pl: '/pl/' };
 
-// Mapowanie kategorii na czytelne etykiety i kolory
 const categoryLabels = {
-  game: { pl: 'PORADNIK / GRA', en: 'GUIDE / GAME', de: 'GUIDE / SPIEL', color: 'from-lime-500 to-green-600 text-black' },
-  hardware: { pl: 'SPRZĘT', en: 'HARDWARE', de: 'HARDWARE', color: 'from-cyan-500 to-blue-600 text-white' },
-  deals: { pl: 'OKAZJA', en: 'DEALS', de: 'ANGEBOTE', color: 'from-amber-500 to-orange-600 text-white' }
+  game: { label: 'GUIDE', color: 'from-lime-400 to-emerald-500 text-slate-950' },
+  hardware: { label: 'HARDWARE', color: 'from-cyan-400 to-blue-500 text-slate-950' },
+  deals: { label: 'DEALS', color: 'from-amber-400 to-orange-500 text-slate-950' }
 };
 ---
 
-<Base lang="en" title="RespawnPing | Gaming Guides, Money Methods & Glitches" description="Your ultimate navigational point for gaming walktroughs, secrets, fast cash methods, and hardware tips in English, Deutsch, and Polski." {alternates}>
+<Base lang="en" title="RespawnPing | Gaming Guides, Money Methods & Glitches" description="Your ultimate waypoint for gaming walkthroughs, secrets, fast cash methods, and hardware tips in English, Deutsch, and Polski." {alternates}>
   
-  {/* Modern Gaming Hero Section with Animated Digital Radar Glow */}
+  {/* Hero Section */}
   <section class="relative overflow-hidden rounded-3xl bg-slate-950 border border-slate-800/80 my-8">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,rgba(132,204,22,0.15),transparent_50%)]"></div>
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.95)_40%,rgba(15,23,42,0.3))]"></div>
-    
-    {/* Animated digital map grid style backdrop */}
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(132,204,22,0.18),transparent_55%)]"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(2,6,23,0.96)_45%,rgba(2,6,23,0.35))]"></div>
     <div class="absolute right-0 top-0 h-full w-1/2 opacity-20 pointer-events-none hidden md:block" style="background-image: radial-gradient(circle, #84cc16 1px, transparent 1px); background-size: 24px 24px;"></div>
 
-    <div class="relative z-10 px-6 py-16 md:px-12 md:py-24 max-w-3xl">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/20 text-lime-400 text-xs font-semibold uppercase tracking-wider mb-6">
-        <span class="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></span>
-        Interactive Gaming Network
+    <div class="relative z-10 px-6 py-14 md:px-12 md:py-20 max-w-3xl">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/25 text-lime-400 text-xs font-bold uppercase tracking-wider mb-6">
+        <span class="w-2 h-2 rounded-full bg-lime-400 animate-pulse"></span>
+        Live Gaming Guides &amp; Intel
       </div>
       
-      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
+      <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white leading-tight">
         Your Waypoint For <span class="bg-gradient-to-r from-lime-400 to-emerald-400 bg-clip-text text-transparent">Gaming Secrets</span>
       </h1>
       <p class="mt-4 text-lg md:text-xl text-slate-300 font-medium">
-        Lokalizacje, szybka kasa, ukryte błędy i sprzęt. Namierzamy kluczowe informacje, zanim zrobią to inni.
+        Exact locations, fast cash methods, glitches, and gear. Pinpointing what matters before everyone else.
       </p>
 
-      {/* Language Selector built like an esports tournament lobby */}
       <div class="mt-8">
-        <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Select your region / Wybierz język</p>
+        <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Choose your edition</p>
         <div class="flex flex-wrap gap-3">
           {languages.map(lang => (
             <a 
-              class="relative group overflow-hidden rounded-xl bg-slate-900 border border-slate-800 px-6 py-3 font-bold text-white transition-all hover:border-lime-500/50 hover:shadow-[0_0_15px_rgba(132,204,22,0.15)] flex items-center gap-3" 
+              class="group rounded-xl bg-slate-900/90 border border-slate-800 px-5 py-2.5 font-bold text-white transition-all hover:border-lime-400/60 hover:bg-slate-800/80 hover:shadow-[0_0_20px_rgba(132,204,22,0.18)] flex items-center gap-2.5" 
               href={alternates[lang]} 
               lang={lang}
             >
-              <span class="w-2 h-2 rounded-full bg-slate-700 group-hover:bg-lime-400 transition-colors"></span>
+              <span class="w-2 h-2 rounded-full bg-slate-600 group-hover:bg-lime-400 transition-colors"></span>
               {names[lang]}
             </a>
           ))}
@@ -63,26 +59,30 @@ const categoryLabels = {
 
   {/* Latest Guides Feed */}
   <section class="my-12">
-    <div class="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
+    <div class="flex items-end justify-between mb-8 border-b border-slate-800 pb-4">
       <div>
-        <h2 class="text-2xl font-extrabold text-white tracking-tight">Najnowsze wpisy / Latest guides</h2>
-        <p class="text-slate-400 text-sm mt-1">Najświeższe poradniki i aktualizacje z radaru</p>
+        <h2 class="text-2xl font-black text-white tracking-tight">Latest Guides</h2>
+        <p class="text-slate-400 text-sm mt-1">Fresh walkthroughs, locations, and verified tricks</p>
       </div>
+      <a href="/en/" class="text-sm font-bold text-lime-400 hover:text-lime-300 transition-colors">
+        View all &rarr;
+      </a>
     </div>
 
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {latestPosts.map(post => {
         const cat = categoryLabels[post.data.category] || categoryLabels.game;
-        const formattedDate = new Date(post.data.pubDate).toLocaleDateString(post.data.lang === 'pl' ? 'pl-PL' : post.data.lang === 'de' ? 'de-DE' : 'en-US', {
+        const postUrl = `/${post.data.lang}/${post.id.split('/').pop()?.replace('.md', '')}`;
+        const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
           year: 'numeric'
         });
 
         return (
-          <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-lime-500/30 transition-all hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.7),0_0_15px_rgba(132,204,22,0.05)]">
+          <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-slate-900/70 border border-slate-800/90 hover:border-lime-400/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.8),0_0_20px_rgba(132,204,22,0.08)]">
             
-            {/* Zdjęcie 16:9 lub efektowny gradient w nowej gamingowej marce */}
+            {/* Thumbnail 16:9 */}
             <div class="relative aspect-video w-full overflow-hidden bg-slate-950">
               {post.data.image ? (
                 <img 
@@ -92,33 +92,28 @@ const categoryLabels = {
                   loading="lazy"
                 />
               ) : (
-                <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-950 to-lime-950 flex flex-col justify-between p-4">
-                  <div class="w-10 h-10 rounded-lg bg-lime-500/10 border border-lime-500/20 flex items-center justify-center text-lime-400 font-bold">
-                    🎯
-                  </div>
-                  <div class="text-[9px] font-black tracking-widest text-lime-400/40 uppercase">
-                    No-Image Placeholder // RespawnPing
-                  </div>
+                <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950/80 flex items-center justify-center">
+                  <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle, #84cc16 1px, transparent 1px); background-size: 16px 16px;"></div>
+                  <svg class="w-12 h-12 text-lime-400/35 group-hover:text-lime-400/60 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                  </svg>
                 </div>
               )}
               
-              {/* Badge kategorii */}
-              <span class={`absolute top-3 left-3 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-gradient-to-r shadow-lg ${cat.color}`}>
-                {cat[post.data.lang] || cat.en}
-              </span>
-
-              {/* Język wpisu */}
-              <span class="absolute top-3 right-3 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-slate-950/80 text-slate-300 border border-slate-800 backdrop-blur-sm">
-                {post.data.lang}
+              {/* Category Badge */}
+              <span class={`absolute top-3 left-3 z-10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md bg-gradient-to-r shadow-lg ${cat.color}`}>
+                {cat.label}
               </span>
             </div>
 
-            {/* Content card */}
+            {/* Content */}
             <div class="flex flex-1 flex-col p-5">
               <span class="text-xs text-slate-500 font-medium">{formattedDate}</span>
               
               <h3 class="mt-2 text-lg font-bold text-white group-hover:text-lime-400 transition-colors line-clamp-2 leading-snug">
-                <a href={`/${post.data.lang}/${post.id.split('/').pop()?.replace('.md', '')}`}>
+                <a href={postUrl} class="after:absolute after:inset-0">
                   {post.data.title}
                 </a>
               </h3>
@@ -127,19 +122,16 @@ const categoryLabels = {
                 {post.data.description}
               </p>
 
-              <div class="mt-4 pt-4 border-t border-slate-800/60 flex items-center justify-between">
+              <div class="mt-4 pt-4 border-t border-slate-800/70 flex items-center justify-between">
                 <div class="flex flex-wrap gap-1.5 overflow-hidden max-h-5">
                   {post.data.tags.slice(0, 2).map(tag => (
-                    <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800/80 text-slate-400">
+                    <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-slate-400">
                       #{tag}
                     </span>
                   ))}
                 </div>
-                <span class="text-xs font-semibold text-lime-400 group-hover:underline inline-flex items-center gap-1 flex-shrink-0">
-                  Read
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
-                    <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
-                  </svg>
+                <span class="text-xs font-bold text-lime-400 inline-flex items-center gap-1 flex-shrink-0">
+                  Read &rarr;
                 </span>
               </div>
             </div>
