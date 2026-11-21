@@ -29,6 +29,10 @@ const Content = rendered?.Content;
 const data = post?.data;
 const slug = Astro.params.slug;
 
+const coverImage = data?.videoId
+  ? `https://i.ytimg.com/vi/${data.videoId}/hqdefault.jpg`
+  : data?.image;
+
 const alternates = data
   ? Object.fromEntries(
       (await getCollection('posts'))
@@ -51,9 +55,9 @@ const ui = {
 }[lang];
 
 const categoryColors = {
-  game: 'from-lime-400 to-emerald-500 text-slate-950',
-  hardware: 'from-cyan-400 to-blue-500 text-slate-950',
-  deals: 'from-amber-400 to-orange-500 text-slate-950',
+  game: 'bg-lime-400 text-black',
+  hardware: 'bg-cyan-400 text-black',
+  deals: 'bg-amber-400 text-black',
 };
 
 const schema = data && {
@@ -63,7 +67,7 @@ const schema = data && {
       '@type': 'Article',
       headline: data.title,
       description: data.description,
-      ...(data.image ? { image: [data.image] } : {}),
+      ...(coverImage ? { image: [coverImage] } : {}),
       datePublished: data.pubDate.toISOString(),
       inLanguage: lang,
       mainEntityOfPage: url,
@@ -91,14 +95,14 @@ const schema = data && {
   noindex={!data && !operatorReady}
 >
   {schema && <script slot="head" type="application/ld+json" set:html={JSON.stringify(schema).replaceAll('<', '\\u003c')} />}
-  {data?.image && <meta slot="head" property="og:image" content={data.image} />}
+  {coverImage && <meta slot="head" property="og:image" content={coverImage} />}
 
   {data && Content ? (
     <article class="mx-auto max-w-4xl">
       <div class="mb-6">
         <a
           href={`/${lang}/`}
-          class="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-3.5 py-2 text-xs font-bold text-slate-300 transition-colors hover:border-lime-400/50 hover:text-lime-400"
+          class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-lime-400"
         >
           &larr; {ui.back}
         </a>
@@ -106,56 +110,43 @@ const schema = data && {
 
       <AdSlot {lang} placement="top" />
 
-      {/* Header + Quick Intel Bar */}
-      <header class="mt-6 mb-8 rounded-3xl border border-slate-800/90 bg-slate-900/60 p-6 sm:p-8">
-        <div class="flex flex-wrap items-center gap-3 text-xs font-bold">
-          <span class={`rounded-md bg-gradient-to-r px-2.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm ${categoryColors[data.category]}`}>
+      {/* Header */}
+      <header class="mt-6 mb-8 border-b border-zinc-800 pb-6">
+        <div class="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-wider">
+          <span class={`px-2 py-0.5 text-[10px] font-black ${categoryColors[data.category]}`}>
             {t[data.category]}
           </span>
-          <time class="text-slate-400" datetime={data.pubDate.toISOString()}>
+          <time class="text-zinc-400" datetime={data.pubDate.toISOString()}>
             {data.pubDate.toLocaleDateString(lang, { dateStyle: 'long', timeZone: 'UTC' })}
           </time>
-          <span class="text-slate-600">&bull;</span>
+          <span class="text-zinc-600">&bull;</span>
           <span class="text-lime-400">{readTime} {ui.readMin}</span>
         </div>
 
         <h1 class="mt-4 text-3xl font-black tracking-tight text-white leading-tight sm:text-5xl">
           {data.title}
         </h1>
-        <p class="mt-4 text-base text-slate-300 leading-relaxed sm:text-lg">
+        <p class="mt-4 text-base text-zinc-300 leading-relaxed sm:text-lg">
           {data.description}
         </p>
 
         {data.tags.length > 0 && (
-          <div class="mt-5 flex flex-wrap gap-2 border-t border-slate-800/80 pt-4">
+          <div class="mt-5 flex flex-wrap gap-2">
             {data.tags.map(tag => (
-              <span class="rounded-lg bg-slate-950/90 border border-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-400">
-                #{tag}
-              </span>
+              <span class="text-xs font-semibold text-zinc-500">#{tag}</span>
             ))}
           </div>
         )}
       </header>
 
-      {/* Cover Image 16:9 */}
-      {data.image && (
-        <figure class="mb-8 overflow-hidden rounded-3xl border border-slate-800/90 bg-slate-950 shadow-2xl">
-          <img
-            src={data.image}
-            alt={data.title}
-            class="aspect-video w-full object-cover object-center"
-          />
-        </figure>
-      )}
-
-      {/* Embedded YouTube Video (when available) */}
-      {data.videoId && (
-        <section class="mb-8 overflow-hidden rounded-3xl border border-lime-500/30 bg-slate-900/70 p-4 sm:p-5">
-          <div class="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-lime-400">
+      {/* Embedded YouTube Video OR Cover Image */}
+      {data.videoId ? (
+        <section class="mb-8 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 sm:p-4">
+          <div class="mb-2.5 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-lime-400">
             <span class="h-2 w-2 rounded-full bg-lime-400 animate-pulse"></span>
             {ui.video}
           </div>
-          <div class="aspect-video w-full overflow-hidden rounded-2xl bg-black">
+          <div class="aspect-video w-full overflow-hidden rounded-lg bg-black">
             <iframe
               class="h-full w-full"
               src={`https://www.youtube-nocookie.com/embed/${data.videoId}`}
@@ -166,10 +157,20 @@ const schema = data && {
             ></iframe>
           </div>
         </section>
+      ) : (
+        coverImage && (
+          <figure class="mb-8 overflow-hidden rounded-xl bg-zinc-900">
+            <img
+              src={coverImage}
+              alt={data.title}
+              class="aspect-video w-full object-cover object-center"
+            />
+          </figure>
+        )
       )}
 
       {/* Main Article Body */}
-      <div class="copy rounded-3xl border border-slate-800/80 bg-slate-900/40 p-6 sm:p-10">
+      <div class="copy">
         <Content />
       </div>
 
@@ -180,21 +181,21 @@ const schema = data && {
       <AffiliateBox {lang} category={data.category} query={data.affiliateQuery} />
 
       {/* Modern Accordion FAQ */}
-      <section class="mt-10 rounded-3xl border border-slate-800/90 bg-slate-900/60 p-6 sm:p-8">
-        <h2 class="mb-5 text-2xl font-black tracking-tight text-white">{t.faq ?? ui.quickFaq}</h2>
+      <section class="mt-10 border-t border-zinc-800 pt-8">
+        <h2 class="mb-5 text-2xl font-black uppercase tracking-tight text-white">{t.faq ?? ui.quickFaq}</h2>
         <div class="space-y-3">
           {data.faq.map(({ q, a }, index) => (
             <details
               open={index === 0}
-              class="group rounded-2xl border border-slate-800 bg-slate-950/70 transition-colors open:border-lime-400/40"
+              class="group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-colors open:border-lime-400/50"
             >
               <summary class="flex cursor-pointer list-none items-center justify-between gap-4 p-4 font-bold text-white select-none group-hover:text-lime-400">
                 <span>{q}</span>
-                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-slate-800 text-xs font-black text-lime-400 transition-transform group-open:rotate-45">
+                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs font-black text-lime-400 transition-transform group-open:rotate-45">
                   +
                 </span>
               </summary>
-              <div class="border-t border-slate-800/70 px-4 pb-4 pt-3 text-sm leading-relaxed text-slate-300">
+              <div class="border-t border-zinc-800/70 px-4 pb-4 pt-3 text-sm leading-relaxed text-zinc-300">
                 {a}
               </div>
             </details>
@@ -206,10 +207,10 @@ const schema = data && {
     </article>
   ) : (
     page && (
-      <article class="panel copy mx-auto max-w-3xl rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-10">
+      <article class="copy mx-auto max-w-3xl">
         <h1 class="text-4xl font-black text-white">{page.title}</h1>
         {page.paragraphs.map(paragraph => (
-          <p class="whitespace-pre-line text-slate-300">{paragraph}</p>
+          <p class="whitespace-pre-line text-zinc-300">{paragraph}</p>
         ))}
       </article>
     )
