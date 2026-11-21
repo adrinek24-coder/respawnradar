@@ -15,7 +15,10 @@ const posts = (await getCollection('posts', ({ data }) => data.lang === lang))
 const alternates = { de: '/de/', en: '/en/', pl: '/pl/' };
 
 const getThumb = (data: { image?: string; videoId?: string }) =>
-  data.videoId ? `https://i.ytimg.com/vi/${data.videoId}/hqdefault.jpg` : data.image;
+  data.videoId ? `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg` : data.image;
+
+const getFallback = (data: { videoId?: string }) =>
+  data.videoId ? `https://i.ytimg.com/vi/${data.videoId}/hqdefault.jpg` : '';
 
 const [heroMain, heroSide1, heroSide2, ...feedPosts] = posts;
 const heroSides = [heroSide1, heroSide2].filter(Boolean);
@@ -42,6 +45,9 @@ const catBadge = {
         {getThumb(heroMain.data) ? (
           <img
             src={getThumb(heroMain.data)}
+            data-fallback={getFallback(heroMain.data)}
+            onerror="if(this.dataset.fallback && this.src !== this.dataset.fallback){this.src = this.dataset.fallback;}"
+            onload="if(this.naturalWidth === 120 && this.dataset.fallback){this.src = this.dataset.fallback;}"
             alt={heroMain.data.title}
             class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
@@ -56,8 +62,9 @@ const catBadge = {
               {t[heroMain.data.category]}
             </span>
             {heroMain.data.videoId && (
-              <span class="bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white">
-                ▶ {ui.video}
+              <span class="inline-flex items-center gap-1 bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white">
+                <svg class="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,4 20,12 6,20" /></svg>
+                {ui.video}
               </span>
             )}
           </div>
@@ -76,11 +83,15 @@ const catBadge = {
       <div class="grid gap-3 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1">
         {heroSides.map(post => {
           const thumb = getThumb(post.data);
+          const fallback = getFallback(post.data);
           return (
             <article class="group relative min-h-[205px] overflow-hidden rounded-xl bg-zinc-900">
               {thumb ? (
                 <img
                   src={thumb}
+                  data-fallback={fallback}
+                  onerror="if(this.dataset.fallback && this.src !== this.dataset.fallback){this.src = this.dataset.fallback;}"
+                  onload="if(this.naturalWidth === 120 && this.dataset.fallback){this.src = this.dataset.fallback;}"
                   alt={post.data.title}
                   class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
@@ -95,8 +106,8 @@ const catBadge = {
                     {t[post.data.category]}
                   </span>
                   {post.data.videoId && (
-                    <span class="bg-red-600 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-                      ▶
+                    <span class="inline-flex items-center justify-center bg-red-600 px-1.5 py-1 text-white" aria-label={ui.video}>
+                      <svg class="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,4 20,12 6,20" /></svg>
                     </span>
                   )}
                 </div>
@@ -140,6 +151,7 @@ const catBadge = {
     <div class="divide-y divide-zinc-800/80">
       {feedPosts.map(({ id, data }) => {
         const thumb = getThumb(data);
+        const fallback = getFallback(data);
         return (
           <article
             data-category={data.category}
@@ -150,6 +162,9 @@ const catBadge = {
               {thumb ? (
                 <img
                   src={thumb}
+                  data-fallback={fallback}
+                  onerror="if(this.dataset.fallback && this.src !== this.dataset.fallback){this.src = this.dataset.fallback;}"
+                  onload="if(this.naturalWidth === 120 && this.dataset.fallback){this.src = this.dataset.fallback;}"
                   alt={data.title}
                   class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
@@ -160,8 +175,9 @@ const catBadge = {
                 </div>
               )}
               {data.videoId && (
-                <span class="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[10px] font-black text-lime-400 backdrop-blur-sm">
-                  ▶ {ui.video}
+                <span class="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded bg-black/80 px-2 py-0.5 text-[10px] font-black text-lime-400 backdrop-blur-sm">
+                  <svg class="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,4 20,12 6,20" /></svg>
+                  {ui.video}
                 </span>
               )}
             </div>
