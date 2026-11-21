@@ -23,6 +23,10 @@ const getFallback = (data: { videoId?: string }) =>
 const [heroMain, heroSide1, heroSide2, ...feedPosts] = posts;
 const heroSides = [heroSide1, heroSide2].filter(Boolean);
 
+const activeCategories = (['game', 'hardware', 'deals'] as const).filter(cat =>
+  feedPosts.some(post => post.data.category === cat)
+);
+
 const ui = {
   de: { latest: 'NEUESTE GUIDES', all: 'Alle', video: 'VIDEO' },
   en: { latest: 'LATEST FEED', all: 'All', video: 'VIDEO' },
@@ -136,16 +140,18 @@ const catBadge = {
         <h2 class="text-xl font-black uppercase tracking-tight text-white">{ui.latest}</h2>
       </div>
 
-      <div class="flex flex-wrap gap-2" id="category-filters">
-        <button data-filter="all" class="filter-btn cursor-pointer border-b-2 border-lime-400 px-2 py-1 text-xs font-black uppercase tracking-wider text-white">
-          {ui.all}
-        </button>
-        {(['game', 'hardware', 'deals'] as const).map(cat => (
-          <button data-filter={cat} class="filter-btn cursor-pointer border-b-2 border-transparent px-2 py-1 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-white">
-            {t[cat]}
+      {activeCategories.length > 1 && (
+        <div class="flex flex-wrap gap-2" id="category-filters">
+          <button data-filter="all" class="filter-btn cursor-pointer border-b-2 border-lime-400 px-2 py-1 text-xs font-black uppercase tracking-wider text-white">
+            {ui.all}
           </button>
-        ))}
-      </div>
+          {activeCategories.map(cat => (
+            <button data-filter={cat} class="filter-btn cursor-pointer border-b-2 border-transparent px-2 py-1 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-white">
+              {t[cat]}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
 
     <div class="divide-y divide-zinc-800/80">
