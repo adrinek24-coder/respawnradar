@@ -159,10 +159,31 @@ def extract_image(item: dict, video_id: str = "") -> str:
     return ""
 
 
+def select_balanced(topics: list[Topic], limit: int) -> list[Topic]:
+    """Układa listę 50/50: naprzemiennie poradniki z wideo i artykuły tekstowe ze zdjęciem."""
+    videos = sorted((t for t in topics if t.video_id), key=lambda t: t.is_guide, reverse=True)
+    articles = sorted((t for t in topics if not t.video_id and t.image), key=lambda t: t.is_guide, reverse=True)
+    fallback = sorted((t for t in topics if not t.video_id and not t.image), key=lambda t: t.is_guide, reverse=True)
+
+    selected: list[Topic] = []
+    v_idx = a_idx = 0
+    while len(selected) < limit and (v_idx < len(videos) or a_idx < len(articles)):
+        if v_idx < len(videos) and len(selected) < limit:
+            selected.append(videos[v_idx])
+            v_idx += 1
+        if a_idx < len(articles) and len(selected) < limit:
+            selected.append(articles[a_idx])
+            a_idx += 1
+
+    if len(selected) < limit:
+        selected.extend(fallback[: limit - len(selected)])
+    return selected
+
+
 def fetch_topics() -> list[Topic]:
     topics: dict[str, Topic] = {}
     working_feeds = 0
-    headers = {"User-Agent": "RespawnPingBot/2.3 (gaming guide aggregator; +https://respawnping.com)"}
+    headers = {"User-Agent": "RespawnPingBot/2.4 (gaming guide aggregator; +https://respawnping.com)"}
     with httpx.Client(timeout=15, follow_redirects=True, max_redirects=5) as client:
         for source, url, needs_gaming_filter in FEEDS:
             try:
@@ -202,12 +223,7 @@ def fetch_topics() -> list[Topic]:
     if not working_feeds:
         raise RuntimeError("No RSS feed responded with a valid document")
 
-    # Priorytet: poradnik z wideo -> samo wideo -> poradnik ze zdjęciem -> reszta ze zdjęciem
-    return sorted(
-        topics.values(),
-        key=lambda t: (bool(t.video_id) and t.is_guide, bool(t.video_id), t.is_guide, bool(t.image)),
-        reverse=True,
-    )
+    return list(topics.values())
 
 
 def generate(client: genai.Client, model: str, topic: Topic) -> Edition:
@@ -320,10 +336,11 @@ def run(client: genai.Client, model: str, limit: int) -> None:
             raise ValueError("Published-trend state must be a JSON object")
         if not STATE.exists():
             save_state(published)
-        candidates = [topic for topic in fetch_topics() if topic.slug not in published]
+        unpublished = [topic for topic in fetch_topics() if topic.slug not in published]
+        candidates = select_balanced(unpublished, limit)
         failures = 0
         published_now = 0
-        for topic in candidates[:limit]:
+        for topic in candidates:
             try:
                 filename = publish_topic(client, model, topic)
             except (genai.errors.APIError, ValidationError, ValueError) as exc:
@@ -354,7 +371,7 @@ def main() -> None:
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     if args.feeds_only:
-        for topic in fetch_topics()[:20]:
+        for topic in select_balanced(fetch_topics(), 20):
             print(f"[vid={bool(topic.video_id)} guide={topic.is_guide} img={bool(topic.image)}] {topic.source}: {topic.title}")
         return
     limit = int(os.environ.get("MAX_POSTS_PER_RUN", "2"))
