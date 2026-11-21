@@ -227,9 +227,10 @@ def generate(client: genai.Client, model: str, topic: Topic) -> Edition:
 
 
 def render_markdown(article: Article, topic: Topic, lang: str, date: str, category: str) -> str:
-    body = article.body
-    if re.search(r"[<>]|\]\s*[\[(]|^\s*\[[^\]]+\]:|^\s*---\s*$", body, re.M):
-        raise ValueError("Body contains HTML, a link, or a frontmatter delimiter")
+    body = re.sub(r"^\s*---\s*$", "", article.body, flags=re.M)
+    body = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", body)
+    if re.search(r"</?[a-zA-Z][^>]*>", body):
+        raise ValueError("Body contains HTML tags")
     if not re.search(r"^\s*[-*+]\s+\S", body, re.M) or not re.search(r"^\s*\|?[ :|-]+\|[ :|-]+\|?\s*$", body, re.M):
         raise ValueError("Body is missing a list or Markdown table")
     fields = article.model_dump(exclude={"body"})
@@ -248,103 +249,3 @@ def atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as tmp:
         temporary = Path(tmp.name)
-        try:
-            tmp.write(content)
-            tmp.close()
-            temporary.replace(path)
-        finally:
-            temporary.unlink(missing_ok=True)
-
-
-def publish_topic(client: genai.Client, model: str, topic: Topic) -> str:
-    existing = {
-        path.name
-        for lang in LANGUAGES
-        for path in (POSTS / lang).glob(f"????-??-??-{topic.slug}.md")
-    }
-    if len(existing) > 1:
-        raise ValueError("Multiple existing dates match this topic")
-    today = datetime.now(timezone.utc).date().isoformat()
-    filename = next(iter(existing), f"{today}-{topic.slug}.md")
-    targets = {lang: POSTS / lang / filename for lang in LANGUAGES}
-    if all(path.is_file() for path in targets.values()):
-        return filename
-    edition = generate(client, model, topic)
-    markdown = {
-        lang: render_markdown(getattr(edition, lang), topic, lang, filename[:10], edition.category)
-        for lang in LANGUAGES
-    }
-    written = []
-    try:
-        for lang, path in targets.items():
-            if not path.exists():
-                atomic_write(path, markdown[lang])
-                written.append(path)
-    except OSError:
-        for path in written:
-            path.unlink()
-        raise
-    return filename
-
-
-def save_state(published: dict) -> None:
-    atomic_write(STATE, json.dumps(published, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
-
-
-def run(client: genai.Client, model: str, limit: int) -> None:
-    STATE.parent.mkdir(parents=True, exist_ok=True)
-    lock = os.open(STATE.parent, os.O_RDONLY)
-    try:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        published = json.loads(STATE.read_text(encoding="utf-8")) if STATE.exists() else {}
-        if not isinstance(published, dict):
-            raise ValueError("Published-trend state must be a JSON object")
-        if not STATE.exists():
-            save_state(published)
-        candidates = [topic for topic in fetch_topics() if topic.slug not in published]
-        failures = 0
-        for topic in candidates[:limit]:
-            try:
-                filename = publish_topic(client, model, topic)
-            except (genai.errors.APIError, ValidationError, ValueError) as exc:
-                logging.error("Could not publish %s (%s): %s", topic.slug, type(exc).__name__, exc)
-                failures += 1
-                continue
-            published[topic.slug] = {
-                "file": filename,
-                "source": topic.source,
-                "url": topic.url,
-                "image": topic.image,
-                "videoId": topic.video_id,
-            }
-            save_state(published)
-            logging.info("Published %s (image=%s, video=%s)", filename, bool(topic.image), bool(topic.video_id))
-        if failures:
-            raise RuntimeError(f"{failures} topic(s) could not be published")
-        if not candidates:
-            logging.info("No unpublished topics found")
-    finally:
-        os.close(lock)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--feeds-only", action="store_true", help="Check feeds without publishing or calling Gemini")
-    args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    if args.feeds_only:
-        for topic in fetch_topics()[:20]:
-            print(f"[vid={bool(topic.video_id)} guide={topic.is_guide} img={bool(topic.image)}] {topic.source}: {topic.title}")
-        return
-    limit = int(os.environ.get("MAX_POSTS_PER_RUN", "2"))
-    if limit < 1:
-        parser.error("MAX_POSTS_PER_RUN must be a positive integer")
-    key = os.environ.get("GEMINI_API_KEY")
-    if not key:
-        parser.error("GEMINI_API_KEY is required to generate articles")
-    with genai.Client(vertexai=True, api_key=key, http_options=types.HttpOptions(timeout=90000, api_version="v1")) as client:
-        run(client, os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"), limit)
-
-
-if __name__ == "__main__":
-    main()
