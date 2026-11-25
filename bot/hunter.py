@@ -397,7 +397,7 @@ def main() -> None:
         for topic in select_balanced(fetch_topics(), 20):
             print(f"[vid={bool(topic.video_id)} guide={topic.is_guide} img={bool(topic.image)}] {topic.source}: {topic.title}")
         return
-    limit = int(os.environ.get("MAX_POSTS_PER_RUN", "2"))
+    limit = int(os.environ.get("MAX_POSTS_PER_RUN", "1"))
     if limit < 1:
         parser.error("MAX_POSTS_PER_RUN must be a positive integer")
     key = os.environ.get("GEMINI_API_KEY")
