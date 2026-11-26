@@ -265,7 +265,7 @@ def generate(client: genai.Client, model: str, topic: Topic) -> Edition:
         ),
         response_mime_type="application/json",
         response_schema=Edition,
-        max_output_tokens=12000,
+        max_output_tokens=24000,
         thinking_config=types.ThinkingConfig(thinking_budget=0) if model == "gemini-2.5-flash" else None,
     )
     max_attempts = 3
@@ -277,14 +277,15 @@ def generate(client: genai.Client, model: str, topic: Topic) -> Edition:
                 config=config,
             )
             return Edition.model_validate_json(response.text or "")
-        except genai.errors.ServerError as exc:
+        except (genai.errors.ServerError, ValidationError) as exc:
             if attempt == max_attempts:
                 raise
             wait_seconds = attempt * 4
+            err_label = getattr(exc, "code", None) or type(exc).__name__
             logging.warning(
-                "Transient API error for %s (%s) on attempt %d/%d; retrying in %ds",
+                "Transient generation/validation issue for %s (%s) on attempt %d/%d; retrying in %ds",
                 topic.slug,
-                exc.code,
+                err_label,
                 attempt,
                 max_attempts,
                 wait_seconds,
