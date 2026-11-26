@@ -1,0 +1,51 @@
+---
+title: "GTA 6: 10 sekretnych lokacji, które musisz odwiedzić (kody, darmowe bronie i ulepszenia)"
+description: "10 najlepszych ukrytych miejsc w GTA 6 z dokładnymi kodami (0072, 0212, 955214, 69185), darmową wyrzutnią rakiet, ukrytym bossem w Piekle oraz stałymi ulepszeniami HP i wytrzymałości."
+tags: ["GTA 6", "GTA 6 sekretne lokacje", "GTA 6 kody do sejfów", "GTA 6 easter eggi", "GTA 6 darmowe bronie", "GTA 6 ulepszenia", "Poradnik Leonida"]
+affiliateQuery: "GTA 6 PS5 Xbox Series X gra"
+faq: [{"q": "Które sekretne miejsca w GTA 6 dają stałe ulepszenia statystyk?", "a": "Ukryta misja Circles of Hell na północy Port Gellhorn na stałe zwiększa maksymalne zdrowie, a zadanie No Flushers z Corsair Key daje permanentny bonus do wytrzymałości w oczyszczalni ścieków w Hamlet."}, {"q": "Jakie są wszystkie kody do Crab Shack w Pelican Valley?", "a": "Hasło do komputera to CLEAVES, kod do sejfu w domu to 0072, a kod na klawiaturze hangaru przy pomoście to 0212. W środku zgarniesz pistolet maszynowy Crab Shack VF5 i torbę z gotówką."}, {"q": "Gdzie zdobyć darmową wyrzutnię rakiet na początku GTA 6?", "a": "W Balsero, na południowy zachód od strzelnicy Griffin Shooting Range (dostępne już w 1. rozdziale, najlepiej po misji Building a Life). Wejdź na ogrodzone złomowisko, do niebieskiej przyczepy z antenami i otwórz klapę w podłodze przed kuchenką po darmowe Hauners H-AT."}, {"q": "Jaki jest kod do sejfu w nawiedzonym hotelu Marbelle w GTA 6?", "a": "Sześciocyfrowy kod do sejfu na parterze Marbelle Hotel (Crosstown, Vice City) to 955214. Najpierw jednak wejdź na dach, jeśli nie chcesz pominąć całej sekwencji horroru w stylu Silent Hill."}, {"q": "Dlaczego garaż do rytuału w Port Gellhorn jest zamknięty?", "a": "Musisz być minimum w 2. rozdziale, przyjechać całkowicie solo (bez partnera) i pojawić się w nocy między północą a 4:00. Jeśli brama jest zamknięta, odjedź z okolicy i wróć kolejnej nocy."}]
+lang: "pl"
+pubDate: "2026-11-26"
+category: "game"
+image: "https://i.ytimg.com/vi/as4GFUWe9cs/hqdefault.jpg"
+videoId: "as4GFUWe9cs"
+---
+
+Nie trać czasu na puste jeżdżenie po Leonidzie — te 10 ukrytych lokacji w GTA 6 daje permanentne ulepszenia zdrowia i wytrzymałości, darmową wyrzutnię rakiet Hauners H-AT już w 1. rozdziale, unikalny PM Crab Shack VF5 i szaloną walkę z bossem w Piekle. Zapisz sobie od razu najważniejsze kody: **CLEAVES**, **0072** i **0212** do bazy w Pelican Valley, **955214** do nawiedzonego Marbelle Hotel oraz **69185** do szopy pod wieżą na Mount Kalaga.
+
+## Jak znaleźć i wyczyścić wszystkie 10 sekretnych lokacji
+
+- **1. Pelican Valley Crab Shack (bagna Grassrivers):** Podpłyń łodzią do bazy wśród namorzynów na południowym zachodzie Pelican Valley. Włącz zasilanie przełącznikiem na zewnętrznej ścianie głównego budynku, zbadaj napisy na deskach w bocznym pokoju i zaloguj się na komputer hasłem **CLEAVES**. Po wyjściu z ekranu zaatakuje cię gigantyczny zmutowany krab. Pokonaj go, otwórz sejf kodem **0072** (podwojony numer okazu 0036) po ponad 1000 $ gotówki, a potem wpisz **0212** w hangarze na końcu pomostu — w środku leży unikalny **Crab Shack VF5 SMG** i torba z łupem warta 8000–10000 $.
+- **2. Dom Circles of Hell i arena Piekła (północne Port Gellhorn):** Od 2. rozdziału pojedź **samodzielnie** między 0:00 a 4:00 w nocy (najpewniej 0:00–2:00) do narożnego domu przy Gellhorn Ave z napisem 'Welcome to the Hell hole'. Pogadaj w oświetlonym na czerwono garażu z dwoma metalowcami (Beelzebub i Dave), wsiądź do ich vana na ognisko w lesie i przytrzymaj **L2 / LT**, żeby wpatrywać się w płomienie. Na arenie w stylu DOOM-a eliminuj wybuchające demony — dopiero wtedy czarny pasek życia Szatana zmienia kolor na **czerwony** i możesz go zranić. Nagrody: strzelba **Hellspawn Comshot 12**, **stały bonus do Max HP**, koszulka i tatuaże.
+- **3. Toaleta na Corsair Key i laboratorium klonowania ('The Final Flush'):** Znajdź jedyny budynek publicznej toalety na północnym krańcu Corsair Key (na północny wschód od Key Lento). W męskiej kabinie zeskanuj plakat 'Don't Flush' aplikacją **WAiNK**, odpisz **TRUTH** (otrzymasz kod **00-00-02**) i spotkaj się nocą z dr. Merle'em w Frank's Waffles w Tequesta. W oczyszczalni ścieków w Hamlet ustaw wszystkie trzy lewe lampki na panelu na zielono, pociągnij dźwignię, a na końcu sam wejdź do komory — zgarniesz **stałe ulepszenie maksymalnej wytrzymałości**.
+- **4. Nawiedzony Marbelle Hotel (południowe Crosstown, Vice City):** Zabezpieczony deskami budynek stoi przy NW 8th Street obok klubu Nine1Nine, przecznicę na wschód od Pawn & Gun. Wejdź otwartymi **tylnymi drzwiami** z lewej alejki i najpierw wbiegnij na ostatnie piętro. Podejdź do manekina w rogu, żeby uruchomić samoczynne otwarcie drzwi, zanik prądu i mgłę w stylu Silent Hill, zgarnij Starą Notatkę na dachu, a na parterze otwórz sejf 6-cyfrowym kodem **955214**. Łup: kilka tysięcy dolarów, zegarek **Crowex Ambassador 'Breakfast'** i osiągnięcie/trofeum 'The Truth Is Out There'.
+- **5. Podziemny bunkier pod przyczepą w Balsero (zachód Vice City):** Dostępny już w 1. rozdziale (najlepiej po misji *Building a Life*). Przejdź przez ulicę na południowy zachód od Griffin Shooting Range na ogrodzone złomowisko, wejdź do niebieskiego kampera oblepionego antenami i otwórz klapę w podłodze przed kuchenką. W zbrojowni na dole czekają darmowa wyrzutnia rakiet **Hauners H-AT** (normalnie kosztuje 16 000 $ w powiększonym Ammu-Nation) oraz **Conspiracist Type 9 SMG**.
+- **6. Dom 'Symulacji' w Belville (Leonard County):** Jasnożółty parterowy domek z dwiema palmami przy Grace Ave w Belville — ten sam, który Rockstar przemycił w 2021 roku na zdjęciu w *GTA Trilogy*. Kucnij przy podwójnej bramie garażowej i ją wyważ, żeby zobaczyć tablicę spiskową NPC-a świadomego życia w grze ('IT'S A SIMULATION', brak dzieci, sobowtóry i notatki o 'J + L'). Na łóżku leży kolekcjonerski numer *Foiled* #329.
+- **7. Magazyn seryjnego mordercy w Port Gellhorn ('Gellhorn's Missing Tourists'):** Sprawdź plakaty zaginionych w lobby Starlet Motel (Rozdział 2) albo idź od razu do zardzewiałego magazynu naprzeciwko warsztatu Mosesa Watkinsa (obok Burnout Scooters). Wczołgaj się przez dziurę z tyłu po prawej (za kojotami), sprawdź trzy szafki z trofeami, odnajdź trójkę ofiar (bagażnik na złomowisku za Pay 'n' Spray, podłoga zielonej przyczepy, zatopione auto na północ od Wild Hog Point) i rozpraw się z Alvanem Westem z infolinii.
+- **8. Radioaktywny staw i zmutowane krokodyle (Grassrivers):** Na południe od Cottonmouth Lake i na południowy zachód od centrum dla zwiedzających z 1. aktu leży mały staw zawalony toksycznymi beczkami. Zbliżenie się do beczek zadaje obrażenia, a w wodzie polują wyraźnie zmutowane krokodyle.
+- **9. Wieża obserwacyjna i zamknięta szopa na Mount Kalaga (Lummox County):** Wejdź na wieżę przeciwpożarową w Mount Kalaga National Park i spisz z tablicy w kabinie kod **69185**. Wpisz **69185** na klawiaturze drewnianej szopy u podnóża wieży, by otworzyć dziennik z tajemniczym szkicem postaci na 2. stronie. Przy okazji zjedź wschodnim zboczem spod Table Rock, gdzie dymi krater z fioletowym meteorytem.
+- **10. Sekretna stacja radiowa 'The Vault' (Downtown Vice City):** Wejdź głównym wejściem do klubu **The Vault** w centrum Vice City (na południe od Jack of Hearts, na zachód od Nine1Nine). Zeskanuj czerwony plakat z maską przeciwgazową aplikacją **WAiNK** (**R1** na PS5 / **RB** na Xbox), a na stałe odblokujesz ukrytą stację **The Vault** w radiu samochodowym.
+
+## Szybka ściągawka: 10 miejsc, kody i nagrody
+
+| Sekretna lokacja | Region / Lokalizacja | Kod / Aktywacja | Nagroda / Łup |
+| --- | --- | --- | --- |
+| Pelican Valley Crab Shack | Bagna Grassrivers (łódź) | Prąd -> PC **CLEAVES** -> Sejf **0072** -> Hangar **0212** | Crab Shack VF5 SMG + torba 8–10 tys. $ |
+| Circles of Hell / Arena Piekła | Płn. Port Gellhorn (Gellhorn Ave) | Od 2. rozdz., solo, 0–4 w nocy, ogień | Hellspawn Comshot 12, **+Max HP**, koszulka, tatuaże |
+| Corsair Key i oczyszczalnia Hamlet | Płn. Corsair Key -> Hamlet | Skan QR WAiNK, **TRUTH**, kod **00-00-02** | **+Max Wytrzymałość** na stałe |
+| Nawiedzony Marbelle Hotel | Płd. Crosstown, NW 8th St | Tylne drzwi -> dach -> Sejf **955214** | Gotówka, zegarek Crowex, karta, trofeum |
+| Bunkier pod kamperem Balsero | Balsero (obok Griffin Shooting Range) | Niebieski kamper z antenami -> klapa | Darmowe **Hauners H-AT RPG** + Conspiracist Type 9 |
+| Dom Symulacji w Belville | Belville, Grace Ave (Leonard County) | Kucnij i otwórz garaż | Magazyn *Foiled* #329 i pokój spiskowca |
+| Magazyn seryjnego mordercy | Port Gellhorn (naprzeciwko Mosesa) | Dziura z tyłu po prawej, 3 poszlaki | Bonus relacji, okulary, postęp do 100% |
+| Radioaktywny staw krokodyli | Grassrivers (płd. od Cottonmouth Lake) | Uważaj na beczki i wodę | Zmutowane krokodyle i ukryte spotkanie |
+| Wieża i szopa Mount Kalaga | Mount Kalaga National Park | Notatka na wieży -> szopa **69185** | Tajemniczy dziennik (+ fioletowy meteoryt obok) |
+| Ukryte radio The Vault | Downtown Vice City | Skan WAiNK czerwonego plakatu z maską | Nowa stacja radiowa **The Vault** na stałe |
+
+## Pro-tipy i rzeczy łatwe do przegapienia
+
+- **Nie otwieraj sejfu w Marbelle Hotel od razu:** Wpisanie **955214** zaraz po wejściu całkowicie pomija sekwencję z gasnącym światłem i mgłą nad Vice City. Najpierw wejdź na górę, a przed wyjściem zgarnij z szafki naprzeciwko schodów kartę komiksową Purple Ratface.
+- **Zrób ręczny zapis przed Circles of Hell:** Zapisz grę przed domem w Port Gellhorn, gdy tylko zobaczysz otwarty czerwony garaż. Jeśli zginiesz w Piekle, **nie oddalaj się** od ogniska (stracisz nagrody) — podejdź do drewnianego tronu i wybierz 'Eat', żeby od razu wrócić na arenę.
+- **Zignoruj ochroniarza przez głośnik w Hamlet:** Po spłukaniu dr. Merle'a ochrona ostrzeże cię, żeby nie wchodzić do komory — wejdź tam mimo wszystko, inaczej stracisz permanentny bonus do wytrzymałości.
+- **Uważaj na policję i sprzedaj łup:** Wyważanie garażu w Belville (albo otwieranie bagażnika auta przed domem, z którego wyskakuje wąż) może ściągnąć policję przy świadkach. Torbę ze znaczonymi banknotami z Pelican Valley spieniężysz w skrytce Briana (kod do drzwi: **7700**).
+
+Źródło: [YouTube Gameranx](<https://www.youtube.com/watch?v=as4GFUWe9cs>)
