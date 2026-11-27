@@ -128,6 +128,23 @@ def extract_video_id(item: dict, link: str) -> str:
     return ""
 
 
+def is_valid_youtube_video(client: httpx.Client, video_id: str) -> bool:
+    """Sprawdza, czy film YouTube istnieje, jest publiczny i ma prawdziwą miniaturę (nie szary placeholder 404)."""
+    if not video_id:
+        return False
+    try:
+        oembed = client.get(
+            f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_id}&format=json",
+            timeout=6,
+        )
+        if oembed.status_code != 200:
+            return False
+        thumb = client.head(f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg", timeout=6)
+        return thumb.status_code == 200
+    except httpx.HTTPError:
+        return False
+
+
 def extract_image(item: dict, video_id: str = "") -> str:
     """Wyciąga najlepszy dostępny URL zdjęcia (HTTPS) z wpisu RSS/Atom lub YouTube."""
     if video_id:
@@ -183,7 +200,7 @@ def select_balanced(topics: list[Topic], limit: int) -> list[Topic]:
 def fetch_topics() -> list[Topic]:
     topics: dict[str, Topic] = {}
     working_feeds = 0
-    headers = {"User-Agent": "RespawnPingBot/2.6 (gaming guide aggregator; +https://respawnping.com)"}
+    headers = {"User-Agent": "RespawnPingBot/2.7 (gaming guide aggregator; +https://respawnping.com)"}
     with httpx.Client(timeout=15, follow_redirects=True, max_redirects=5) as client:
         for source, url, needs_gaming_filter in FEEDS:
             try:
@@ -211,14 +228,27 @@ def fetch_topics() -> list[Topic]:
                 if needs_gaming_filter and not GAMING.search(f"{title} {tags}"):
                     continue
                 slug = slugify(title)
-                if not slug:
+                if not slug or slug in topics:
                     continue
-                video_id = extract_video_id(item, link)
+
+                raw_video_id = extract_video_id(item, link)
+                is_yt_feed = "youtube.com/feeds/videos.xml" in url
+
+                if raw_video_id:
+                    if is_valid_youtube_video(client, raw_video_id):
+                        video_id = raw_video_id
+                    elif is_yt_feed:
+                        logging.info("Skipping unavailable YouTube video %s (%s)", raw_video_id, title)
+                        continue
+                    else:
+                        video_id = ""
+                else:
+                    video_id = ""
+
                 image = extract_image(item, video_id)
                 is_guide = bool(GUIDE_PRIORITY.search(title))
-                topics.setdefault(
-                    slug,
-                    Topic(title, source, link, slug, image=image, video_id=video_id, is_guide=is_guide),
+                topics[slug] = Topic(
+                    title, source, link, slug, image=image, video_id=video_id, is_guide=is_guide
                 )
     if not working_feeds:
         raise RuntimeError("No RSS feed responded with a valid document")
@@ -408,7 +438,7 @@ def main() -> None:
         for topic in select_balanced(fetch_topics(), 20):
             print(f"[vid={bool(topic.video_id)} guide={topic.is_guide} img={bool(topic.image)}] {topic.source}: {topic.title}")
         return
-    limit = int(os.environ.get("MAX_POSTS_PER_RUN", "1"))
+    limit = int(os.environ.get("MAX_POSTS_PER_RUN", "2"))
     if limit < 1:
         parser.error("MAX_POSTS_PER_RUN must be a positive integer")
     key = os.environ.get("GEMINI_API_KEY")
