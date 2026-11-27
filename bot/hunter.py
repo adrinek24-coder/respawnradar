@@ -70,6 +70,12 @@ GUIDE_PRIORITY = re.compile(
     re.I,
 )
 
+# Lekkie podbicie priorytetu dla tematów związanych z GTA VI
+GTA6_PRIORITY = re.compile(
+    r"\b(?:gta\s*(?:6|vi)|grand theft auto\s*(?:6|vi)|leonida|lucia|jason|vice city)\b",
+    re.I,
+)
+
 IMG_TAG = re.compile(r'<img[^>]+src=["\'](https://[^"\']+)["\']', re.I)
 YT_ID = re.compile(r"(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_-]{11})")
 
@@ -110,6 +116,7 @@ class Topic:
     image: str = ""
     video_id: str = ""
     is_guide: bool = False
+    is_gta6: bool = False
 
 
 def slugify(title: str) -> str:
@@ -176,11 +183,15 @@ def extract_image(item: dict, video_id: str = "") -> str:
     return ""
 
 
+def topic_score(topic: Topic) -> int:
+    return (2 if topic.is_guide else 0) + (3 if topic.is_gta6 else 0)
+
+
 def select_balanced(topics: list[Topic], limit: int) -> list[Topic]:
-    """Układa listę 50/50: naprzemiennie poradniki z wideo i artykuły tekstowe ze zdjęciem, z priorytetem poradników."""
-    videos = sorted((t for t in topics if t.video_id), key=lambda t: t.is_guide, reverse=True)
-    articles = sorted((t for t in topics if not t.video_id and t.image), key=lambda t: t.is_guide, reverse=True)
-    fallback = sorted((t for t in topics if not t.video_id and not t.image), key=lambda t: t.is_guide, reverse=True)
+    """Układa listę 50/50: naprzemiennie poradniki z wideo i artykuły tekstowe ze zdjęciem, z priorytetem poradników i GTA VI."""
+    videos = sorted((t for t in topics if t.video_id), key=topic_score, reverse=True)
+    articles = sorted((t for t in topics if not t.video_id and t.image), key=topic_score, reverse=True)
+    fallback = sorted((t for t in topics if not t.video_id and not t.image), key=topic_score, reverse=True)
 
     selected: list[Topic] = []
     v_idx = a_idx = 0
@@ -200,7 +211,7 @@ def select_balanced(topics: list[Topic], limit: int) -> list[Topic]:
 def fetch_topics() -> list[Topic]:
     topics: dict[str, Topic] = {}
     working_feeds = 0
-    headers = {"User-Agent": "RespawnPingBot/2.7 (gaming guide aggregator; +https://respawnping.com)"}
+    headers = {"User-Agent": "RespawnPingBot/2.8 (gaming guide aggregator; +https://respawnping.com)"}
     with httpx.Client(timeout=15, follow_redirects=True, max_redirects=5) as client:
         for source, url, needs_gaming_filter in FEEDS:
             try:
@@ -247,8 +258,16 @@ def fetch_topics() -> list[Topic]:
 
                 image = extract_image(item, video_id)
                 is_guide = bool(GUIDE_PRIORITY.search(title))
+                is_gta6 = bool(GTA6_PRIORITY.search(f"{title} {tags}"))
                 topics[slug] = Topic(
-                    title, source, link, slug, image=image, video_id=video_id, is_guide=is_guide
+                    title,
+                    source,
+                    link,
+                    slug,
+                    image=image,
+                    video_id=video_id,
+                    is_guide=is_guide,
+                    is_gta6=is_gta6,
                 )
     if not working_feeds:
         raise RuntimeError("No RSS feed responded with a valid document")
@@ -390,16 +409,37 @@ def save_state(published: dict) -> None:
     atomic_write(STATE, json.dumps(published, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
+def load_state() -> dict:
+    if not STATE.exists():
+        return {}
+    raw = STATE.read_text(encoding="utf-8")
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, dict):
+            return parsed
+    except json.JSONDecodeError as exc:
+        logging.warning("Corrupted JSON in %s (%s); attempting recovery from existing posts", STATE, exc)
+
+    recovered: dict[str, dict] = {}
+    for lang in LANGUAGES:
+        lang_dir = POSTS / lang
+        if not lang_dir.is_dir():
+            continue
+        for md_file in sorted(lang_dir.glob("????-??-??-*.md")):
+            match = re.fullmatch(r"\d{4}-\d{2}-\d{2}-(.+)\.md", md_file.name)
+            if match:
+                slug = match.group(1)
+                recovered.setdefault(slug, {"file": md_file.name})
+    return recovered
+
+
 def run(client: genai.Client, model: str, limit: int) -> None:
     STATE.parent.mkdir(parents=True, exist_ok=True)
     lock = os.open(STATE.parent, os.O_RDONLY)
     try:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        published = json.loads(STATE.read_text(encoding="utf-8")) if STATE.exists() else {}
-        if not isinstance(published, dict):
-            raise ValueError("Published-trend state must be a JSON object")
-        if not STATE.exists():
-            save_state(published)
+        published = load_state()
+        save_state(published)
         unpublished = [topic for topic in fetch_topics() if topic.slug not in published]
         candidates = select_balanced(unpublished, limit)
         failures = 0
@@ -436,7 +476,10 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     if args.feeds_only:
         for topic in select_balanced(fetch_topics(), 20):
-            print(f"[vid={bool(topic.video_id)} guide={topic.is_guide} img={bool(topic.image)}] {topic.source}: {topic.title}")
+            print(
+                f"[vid={bool(topic.video_id)} gta6={topic.is_gta6} guide={topic.is_guide} img={bool(topic.image)}] "
+                f"{topic.source}: {topic.title}"
+            )
         return
     limit = int(os.environ.get("MAX_POSTS_PER_RUN", "2"))
     if limit < 1:
