@@ -60,13 +60,6 @@
     "url": "https://www.youtube.com/shorts/idpGnMXQVW8",
     "videoId": "idpGnMXQVW8"
   },
-  "family-can-wait": {
-    "file": "2026-11-27-family-can-wait.md",
-    "image": "https://i.ytimg.com/vi/zVD6ANPydxY/hqdefault.jpg",
-    "source": "YouTube IGN",
-    "url": "https://www.youtube.com/shorts/zVD6ANPydxY",
-    "videoId": "zVD6ANPydxY"
-  },
   "fish-for-secret-animals-codes-november-2026": {
     "file": "2026-11-22-fish-for-secret-animals-codes-november-2026.md",
     "image": "https://www.dexerto.com/cdn-image/wp-content/uploads/2026/11/22/Roblox-Fish-for-Secret-Animals-Codes.jpg?width=1080&quality=75&format=auto",
@@ -258,4 +251,5 @@
     "source": "YouTube IGN",
     "url": "https://www.youtube.com/watch?v=HRbGSVtz0B4",
     "videoId": "HRbGSVtz0B4"
-  },
+  }
+}
